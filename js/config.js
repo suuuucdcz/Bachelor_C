@@ -11,6 +11,6 @@
    ============================================================ */
 
 const CONFIG_SUPABASE = {
-  url: "",       /* ex : "https://abcdefgh.supabase.co" */
-  cleAnon: ""    /* ex : "eyJhbGciOiJIUzI1NiIs..." */
+  url: "https://hsqhclbptgovpzwlflue.supabase.co",
+  cleAnon: "sb_publishable_o7DZVo6DF6gjZAcPGWaRVA_-IwWjFZB"
 };
