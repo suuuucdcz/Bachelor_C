@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
+  <meta name="theme-color" content="#0f1117">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Entraînement C">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icone.svg">
+  <title>Entraînement C — TBIn212</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-darker.min.css">
+  <link rel="stylesheet" href="css/style.css?v=5">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>⚙️</text></svg>">
+</head>
+<body>
+  <header class="entete">
+    <div class="entete-contenu">
+      <a class="logo" href="#" id="lien-accueil">
+        <span class="logo-icone">⚙️</span>
+        <span>
+          <strong>Entraînement C</strong>
+          <small>TBIn212 — Programmation en C</small>
+        </span>
+      </a>
+      <div class="entete-droite">
+        <div class="progression-globale" title="Progression globale (moyenne des meilleurs scores)">
+          <span id="progression-texte">0 %</span>
+          <div class="barre"><div class="barre-remplie" id="progression-barre"></div></div>
+        </div>
+        <button class="btn btn-fantome" id="btn-reset" title="Réinitialiser toute la progression">↺</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="app" class="conteneur"></main>
+
+  <footer class="pied">
+    Site d'entraînement généré à partir du cours TBIn212 (CM01 → CM07). Bon courage ! 💪
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/clike/clike.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/config.js?v=5"></script>
+  <script src="js/compte.js?v=5"></script>
+  <script src="js/data.js?v=5"></script>
+  <script src="js/exercices.js?v=5"></script>
+  <script src="js/executeur.js?v=5"></script>
+  <script src="js/app.js?v=5"></script>
+</body>
+</html>
