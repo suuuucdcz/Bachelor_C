@@ -626,12 +626,44 @@ function sauverBrouillon(exId) {
 
 /* ---------------- Compilation & tests ---------------- */
 
+/* Transforme un texte en littéral de chaîne C (pour injecter les
+   fichiers de données des exercices dans le source compilé). */
+function enChaineC(texte) {
+  return String(texte)
+    .replace(/\\/g, "\\\\")
+    .replace(/"/g, "\\\"")
+    .replace(/\r/g, "")
+    .replace(/\t/g, "\\t")
+    .replace(/\n/g, "\\n");
+}
+
+/* Les fichiers fournis (CM07) sont créés par le programme lui-même
+   juste avant main, via un constructeur gcc : les deux services
+   d'exécution se comportent ainsi exactement pareil. */
+function blocFichiers(fichiers) {
+  let c = "\n\n/* ===== Fichiers de donnees de l'exercice (crees automatiquement) ===== */\n" +
+    "#include <stdio.h>\n" +
+    "__attribute__((constructor)) static void __preparer_fichiers_exercice(void) {\n" +
+    "    FILE *__fx;\n";
+  fichiers.forEach(function (f) {
+    c += '    __fx = fopen("' + f.nom + '", "w");\n' +
+      '    if (__fx != NULL) { fputs("' + enChaineC(f.contenu) + '", __fx); fclose(__fx); }\n';
+  });
+  return c + "}\n";
+}
+
 function assemblerCode(ex, codeUtilisateur) {
+  let complet;
   if (ex.type === "fonction") {
-    return ENTETES_FONCTION + codeUtilisateur +
+    complet = ENTETES_FONCTION + codeUtilisateur +
       "\n\n/* ===== Programme de test automatique ===== */\n" + ex.harnais;
+  } else {
+    complet = codeUtilisateur;
   }
-  return codeUtilisateur;
+  if (ex.fichiers && ex.fichiers.length > 0) {
+    complet += blocFichiers(ex.fichiers);
+  }
+  return complet;
 }
 
 function testsDe(ex) {
@@ -656,50 +688,60 @@ async function testerExercice(ex, origine) {
   }
 
   btn.disabled = true;
-  zone.innerHTML = '<div class="attente"><div class="roue"></div>Compilation et exécution sur gcc (service en ligne)…</div>';
+  const tests = testsDe(ex);
+  let termines = 0;
+
+  function afficherAttente() {
+    zone.innerHTML = '<div class="attente"><div class="roue"></div>Compilation gcc en ligne' +
+      (tests.length > 1 ? " — " + tests.length + " tests en parallèle" : "") +
+      (termines > 0 ? " (" + termines + "/" + tests.length + " terminés)" : "") + "…</div>";
+  }
+  afficherAttente();
   assurerVisible(zone);
 
   const codeComplet = assemblerCode(ex, code);
-  const tests = testsDe(ex);
-  const resultats = [];
-  let erreurCompil = null;
-  let erreurReseau = null;
 
-  for (let i = 0; i < tests.length; i++) {
-    const t = tests[i];
-    const res = await EXECUTEUR.executer(codeComplet, t.stdin, ex.fichiers);
-    if (!res.ok) {
-      if (res.etape === "compilation") erreurCompil = res.message;
-      else erreurReseau = res.message;
-      break;
-    }
-    resultats.push({
-      test: t,
+  /* tous les tests partent en même temps : temps total = le plus lent */
+  const reponses = await Promise.all(tests.map(function (t) {
+    return EXECUTEUR.executer(codeComplet, t.stdin).then(function (res) {
+      termines++;
+      if (termines < tests.length) afficherAttente();
+      return res;
+    });
+  }));
+
+  btn.disabled = false;
+
+  const echecCompil = reponses.find(function (r) { return !r.ok && r.etape === "compilation"; });
+  if (echecCompil) {
+    marquerTentative(ex.id);
+    zone.innerHTML = '<div class="bandeau-echec">❌ Erreur de compilation — gcc te dit :</div>' +
+      '<pre class="erreur-compil">' + echapper(nettoyerErreur(echecCompil.message, ex)) + "</pre>";
+    assurerVisible(zone);
+    return;
+  }
+
+  const echecReseau = reponses.find(function (r) { return !r.ok; });
+  if (echecReseau) {
+    zone.innerHTML = '<div class="bandeau-erreur">🌐 ' + echapper(echecReseau.message) + "</div>" +
+      '<div class="quiz-actions"><button class="btn btn-principal" id="btn-reessayer">↺ Réessayer</button></div>';
+    document.getElementById("btn-reessayer").addEventListener("click", function () {
+      testerExercice(ex, origine);
+    });
+    assurerVisible(zone);
+    return;
+  }
+
+  const resultats = reponses.map(function (res, i) {
+    return {
+      test: tests[i],
       obtenu: res.stdout,
       stderr: res.stderr,
       codeRetour: res.codeRetour,
       tue: res.tue,
-      reussi: normaliserSortie(res.stdout) === normaliserSortie(t.attendu) && !res.tue
-    });
-    zone.innerHTML = '<div class="attente"><div class="roue"></div>Test ' + (i + 1) + "/" + tests.length + " exécuté…</div>";
-    if (i < tests.length - 1) await pause(350);
-  }
-
-  btn.disabled = false;
-
-  if (erreurReseau) {
-    zone.innerHTML = '<div class="bandeau-erreur">🌐 ' + echapper(erreurReseau) + "</div>";
-    assurerVisible(zone);
-    return;
-  }
-
-  if (erreurCompil) {
-    marquerTentative(ex.id);
-    zone.innerHTML = '<div class="bandeau-echec">❌ Erreur de compilation — gcc te dit :</div>' +
-      '<pre class="erreur-compil">' + echapper(nettoyerErreur(erreurCompil, ex)) + "</pre>";
-    assurerVisible(zone);
-    return;
-  }
+      reussi: normaliserSortie(res.stdout) === normaliserSortie(tests[i].attendu) && !res.tue
+    };
+  });
 
   const toutBon = resultats.every(function (r) { return r.reussi; });
   let html = "";
