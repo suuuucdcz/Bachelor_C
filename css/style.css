@@ -20,6 +20,10 @@
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
+/* overflow-x: clip (et non hidden) : bloque tout débordement horizontal
+   sans casser le position: sticky de l'en-tête */
+html, body { overflow-x: clip; }
+
 body {
   background: var(--fond);
   color: var(--texte);
@@ -211,6 +215,7 @@ body {
 .fil-ariane {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
   color: var(--texte-2);
   font-size: 0.85rem;
@@ -804,15 +809,22 @@ body {
 
 /* ============ Adaptation téléphone ============ */
 @media (max-width: 600px) {
+  /* sécurité : aucun défilement horizontal de la page entière */
+  html, body { overflow-x: hidden; }
   .conteneur { width: calc(100% - 24px); padding-top: 18px; }
 
-  /* en-tête compact */
-  .entete-contenu { padding: 8px 0; gap: 10px; }
+  /* en-tête compact : le bouton compte perd son libellé (👤 seul),
+     sinon la ligne déborde à droite sur un écran de 360 px */
+  .entete-contenu { padding: 8px 0; gap: 8px; }
+  .logo { min-width: 0; }
   .logo small { display: none; }
   .logo-icone { font-size: 1.4rem; }
-  .logo strong { font-size: 0.95rem; }
-  .progression-globale .barre { width: 64px; }
-  .progression-globale { font-size: 0.78rem; }
+  .logo strong { font-size: 0.95rem; white-space: nowrap; }
+  .entete-droite { gap: 6px; flex-shrink: 0; }
+  .progression-globale .barre { width: 52px; }
+  .progression-globale { font-size: 0.78rem; gap: 6px; }
+  .compte-libelle { display: none; }
+  .btn-compte { padding: 8px 10px; }
 
   .hero { padding: 8px 0 20px; }
   .hero h1 { font-size: 1.45rem; }

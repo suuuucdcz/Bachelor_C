@@ -69,19 +69,25 @@ const COMPTE = (function () {
 
   /* ---------- Interface (bouton en-tête + fenêtre de connexion) ---------- */
 
+  /* Le libellé est dans un span masqué sur petit écran : seul le 👤 reste,
+     sinon l'en-tête déborde à droite sur téléphone. */
   function majBouton() {
     const btn = document.getElementById("btn-compte");
     if (!btn) return;
+    btn.textContent = "👤";
+    const libelle = document.createElement("span");
+    libelle.className = "compte-libelle";
     if (connecte()) {
       const nom = (utilisateur.email || "").split("@")[0];
-      btn.textContent = "👤 " + (nom.length > 12 ? nom.slice(0, 12) + "…" : nom);
+      libelle.textContent = " " + (nom.length > 12 ? nom.slice(0, 12) + "…" : nom);
       btn.title = "Connecté : " + utilisateur.email + " — clique pour te déconnecter";
       btn.classList.add("compte-connecte");
     } else {
-      btn.textContent = "👤 Se connecter";
+      libelle.textContent = " Se connecter";
       btn.title = "Créer un compte ou se connecter pour sauvegarder ta progression en ligne";
       btn.classList.remove("compte-connecte");
     }
+    btn.appendChild(libelle);
   }
 
   function creerInterface() {

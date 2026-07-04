@@ -101,10 +101,10 @@ Pour mettre à jour le site plus tard : relance `npx vercel --prod`.
 - **Mise à jour du site** : quand tu modifies un fichier JS/CSS, incrémente
   le numéro `?v=5` dans `index.html` (→ `?v=6`) pour que les navigateurs
   des étudiants rechargent la nouvelle version.
-- **Compilation C** : elle passe par l'API publique Piston (gratuite,
-  ~5 requêtes/seconde). Pour une classe entière qui compile en même temps
-  en TP, ça peut ralentir aux heures de pointe — dans ce cas on pourra
-  héberger notre propre exécuteur, dis-le-moi.
+- **Compilation C** : elle passe par l'API publique Wandbox (gratuite,
+  gcc 13), avec Piston en secours. Pour une classe entière qui compile
+  en même temps en TP, ça peut ralentir aux heures de pointe — dans ce
+  cas on pourra héberger notre propre exécuteur, dis-le-moi.
 - **Limites gratuites** : Supabase Free = 500 Mo de base et 50 000
   utilisateurs actifs/mois ; Vercel Hobby = 100 Go de trafic/mois.
   Une classe entière n'en utilisera qu'une fraction minuscule.

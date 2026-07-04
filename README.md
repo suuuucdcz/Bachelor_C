@@ -24,7 +24,7 @@ Site 100 % statique : ouvrir `index.html` dans un navigateur, ou servir
 le dossier tel quel (Vercel, Netlify, GitHub Pages…).
 
 - La **compilation** des exercices nécessite une connexion Internet
-  (API publique [Piston](https://github.com/engineer-man/piston)).
+  (API publique [Wandbox](https://wandbox.org), secours Piston).
 - Les **comptes en ligne** s'activent en remplissant `js/config.js`
   (voir `README-DEPLOIEMENT.md` pour le guide complet Supabase + Vercel).
 - Après toute modification JS/CSS, incrémenter le paramètre `?v=N`
@@ -37,7 +37,7 @@ index.html            page unique (l'application gère la navigation)
 css/style.css         styles (thème sombre, responsive)
 js/data.js            fiches + questions de quiz (par chapitre)
 js/exercices.js       les 48 exercices de code (énoncés, tests, solutions)
-js/executeur.js       exécution du C à distance (Piston + secours Wandbox)
+js/executeur.js       exécution du C à distance (Wandbox + secours Piston)
 js/compte.js          comptes & synchronisation de progression (Supabase)
 js/config.js          clés Supabase (vide = mode local)
 js/app.js             moteur de l'application

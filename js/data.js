@@ -23,12 +23,12 @@ const CHAPITRES = [
       {
         titre: "Le C, un langage compilé",
         html: "<p>Le C (Kernighan &amp; Ritchie, années 1970) est un langage <strong>compilé</strong> : le code source doit être traduit en langage machine avant de pouvoir être exécuté. La chaîne de compilation comporte 4 étapes :</p><ul><li><strong>Préprocesseur</strong> : traite les directives commençant par <code>#</code> (<code>#include</code>, <code>#define</code>…)</li><li><strong>Compilation</strong> : traduit le code C en assembleur puis en code objet</li><li><strong>Édition de liens</strong> : assemble les fichiers objets et les bibliothèques en un exécutable</li></ul>",
-        code: "gcc -Wall main.c -o prog     # compile main.c en un exécutable nommé prog\n./prog                       # exécute le programme"
+        code: "gcc ./exemple1.c -Wall -o test.exe\n./test.exe"
       },
       {
         titre: "Structure minimale d'un programme",
         html: "<p>Tout programme C commence son exécution par la fonction <code>main</code>. Le <code>return 0;</code> signale au système que tout s'est bien passé.</p>",
-        code: "#include <stdio.h>\n\nint main(void) {\n    printf(\"Bonjour le monde !\\n\");\n    return 0;\n}"
+        code: "#include <stdio.h>\n\nint main() {\n    printf(\"Bonjour le monde !\\n\");\n    return 0;\n}"
       },
       {
         titre: "Variables et entrées / sorties",
@@ -42,26 +42,26 @@ const CHAPITRES = [
       {
         titre: "Structures de contrôle",
         html: "<p><code>if / else</code>, <code>switch</code> (ne pas oublier <code>break</code> !), <code>while</code>, <code>do…while</code> (s'exécute <strong>au moins une fois</strong>) et <code>for</code>.</p>",
-        code: "for (int i = 0; i < 5; i++) {\n    printf(\"%d \", i);       /* affiche : 0 1 2 3 4 */\n}\n\nswitch (choix) {\n    case 1:  printf(\"un\\n\");   break;\n    case 2:  printf(\"deux\\n\"); break;\n    default: printf(\"autre\\n\");\n}"
+        code: "for(int i = 0; i < 5; i++) {\n    printf(\"%d \", i);       /* affiche : 0 1 2 3 4 */\n}\n\nswitch (choix) {\n    case 1:  printf(\"un\\n\");   break;\n    case 2:  printf(\"deux\\n\"); break;\n    default: printf(\"autre\\n\");\n}"
       },
       {
         titre: "Fonctions et passage par valeur",
         html: "<p>Une fonction se déclare avec un <strong>prototype</strong>, puis se définit. En C, les arguments sont passés <strong>par valeur</strong> : la fonction travaille sur une <strong>copie</strong>, la variable de l'appelant n'est jamais modifiée (il faudra des pointeurs pour ça → CM03).</p>",
-        code: "int carre(int x);            /* prototype */\n\nint main(void) {\n    printf(\"%d\\n\", carre(4));   /* 16 */\n    return 0;\n}\n\nint carre(int x) {           /* définition */\n    return x * x;\n}"
+        code: "int carre(int x);            /* prototype */\n\nint main() {\n    printf(\"%d\\n\", carre(4));   /* 16 */\n    return 0;\n}\n\nint carre(int x) {           /* définition */\n    return x * x;\n}"
       }
     ],
     questions: [
       {
         type: "qcm",
-        q: "Quelle commande compile le fichier main.c en un exécutable nommé prog ?",
+        q: "Quelle commande compile le fichier exemple1.c en un exécutable nommé test.exe ?",
         choix: [
-          "gcc -Wall main.c -o prog",
-          "gcc -Wall prog -o main.c",
-          "gcc main.c prog",
-          "run main.c -o prog"
+          "gcc ./exemple1.c -Wall -o test.exe",
+          "gcc ./test.exe -Wall -o exemple1.c",
+          "gcc exemple1.c test.exe",
+          "run ./exemple1.c -o test.exe"
         ],
         bonne: 0,
-        explication: "L'option -o précise le nom du fichier de sortie (l'exécutable). -Wall active tous les avertissements, très utile pour détecter les erreurs."
+        explication: "C'est la commande du cours : le fichier à compiler d'abord, puis -Wall (affichage des avertissements, très utile !) et -o qui précise le nom du fichier exécutable créé."
       },
       {
         type: "qcm",
@@ -106,7 +106,7 @@ const CHAPITRES = [
       {
         type: "sortie",
         q: "Que va afficher ce code ? (sépare les valeurs par des espaces)",
-        code: "for (int i = 0; i < 3; i++) {\n    printf(\"%d \", i);\n}",
+        code: "for(int i = 0; i < 3; i++) {\n    printf(\"%d \", i);\n}",
         reponses: ["0 1 2"],
         affichage: "0 1 2",
         explication: "La boucle démarre à i = 0 et s'arrête dès que la condition i < 3 est fausse : elle affiche donc 0, 1 et 2."
@@ -133,7 +133,7 @@ const CHAPITRES = [
       {
         type: "sortie",
         q: "Que va afficher ce programme ?",
-        code: "void double_valeur(int x) {\n    x = x * 2;\n}\n\nint main(void) {\n    int a = 10;\n    double_valeur(a);\n    printf(\"%d\", a);\n    return 0;\n}",
+        code: "void double_valeur(int x) {\n    x = x * 2;\n}\n\nint main() {\n    int a = 10;\n    double_valeur(a);\n    printf(\"%d\", a);\n    return 0;\n}",
         reponses: ["10"],
         affichage: "10",
         explication: "Passage par valeur : la fonction reçoit une COPIE de a. Elle modifie sa copie locale x, mais a reste inchangé dans main."
@@ -391,7 +391,7 @@ const CHAPITRES = [
       {
         titre: "Passage par adresse",
         html: "<p>Pour qu'une fonction <strong>modifie une variable de l'appelant</strong>, on lui passe l'adresse de cette variable. C'est exactement ce que fait <code>scanf</code> ! L'exemple canonique du cours est l'échange de deux valeurs :</p>",
-        code: "void echange(int *x, int *y) {\n    int tmp = *x;\n    *x = *y;\n    *y = tmp;\n}\n\nint main(void) {\n    int a = 1, b = 2;\n    echange(&a, &b);        /* on passe les ADRESSES */\n    printf(\"%d %d\\n\", a, b); /* 2 1 : vraiment échangés */\n    return 0;\n}"
+        code: "void echange(int *x, int *y) {\n    int tmp = *x;\n    *x = *y;\n    *y = tmp;\n}\n\nint main() {\n    int a = 1, b = 2;\n    echange(&a, &b);        /* on passe les ADRESSES */\n    printf(\"%d %d\\n\", a, b); /* 2 1 : vraiment échangés */\n    return 0;\n}"
       },
       {
         titre: "Pointeurs et tableaux",
@@ -447,7 +447,7 @@ const CHAPITRES = [
       {
         type: "sortie",
         q: "Que va afficher ce programme ? (sépare les valeurs par un espace)",
-        code: "void echange(int *x, int *y) {\n    int tmp = *x;\n    *x = *y;\n    *y = tmp;\n}\n\nint main(void) {\n    int a = 1, b = 2;\n    echange(&a, &b);\n    printf(\"%d %d\", a, b);\n    return 0;\n}",
+        code: "void echange(int *x, int *y) {\n    int tmp = *x;\n    *x = *y;\n    *y = tmp;\n}\n\nint main() {\n    int a = 1, b = 2;\n    echange(&a, &b);\n    printf(\"%d %d\", a, b);\n    return 0;\n}",
         reponses: ["2 1"],
         affichage: "2 1",
         explication: "Grâce au passage par adresse, la fonction manipule directement a et b (et non des copies) : l'échange est réellement effectué."
@@ -559,7 +559,7 @@ const CHAPITRES = [
       {
         titre: "malloc, calloc, realloc, free",
         html: "<ul><li><code>malloc(n)</code> : alloue n octets, contenu <strong>non initialisé</strong>, retourne <code>void*</code> (ou <code>NULL</code> si échec)</li><li><code>calloc(nb, taille)</code> : alloue nb × taille octets <strong>initialisés à zéro</strong></li><li><code>realloc(p, n)</code> : redimensionne un bloc déjà alloué (en conservant le contenu)</li><li><code>free(p)</code> : libère le bloc — obligatoire pour chaque allocation !</li></ul><p><strong>Réflexe systématique :</strong> toujours tester le retour contre <code>NULL</code>.</p>",
-        code: "#include <stdlib.h>\n\nint n = 10;\nint *t = malloc(n * sizeof(int));   /* tableau de 10 int sur le tas */\nif (t == NULL) {\n    printf(\"Echec d'allocation\\n\");\n    return 1;\n}\nfor (int i = 0; i < n; i++) {\n    t[i] = i * i;\n}\nfree(t);                            /* liberation obligatoire */\nt = NULL;                           /* bon reflexe anti « dangling pointer » */"
+        code: "#include <stdlib.h>\n\nint n = 10;\nint *t = malloc(n * sizeof(int));   /* tableau de 10 int sur le tas */\nif (t == NULL) {\n    printf(\"Echec d'allocation\\n\");\n    return 1;\n}\nfor(int i = 0; i < n; i++) {\n    t[i] = i * i;\n}\nfree(t);                            /* liberation obligatoire */\nt = NULL;                           /* bon reflexe anti « dangling pointer » */"
       },
       {
         titre: "Les 3 erreurs mortelles",
@@ -568,7 +568,7 @@ const CHAPITRES = [
       {
         titre: "Tableau 2D dynamique",
         html: "<p>Une matrice dynamique se construit comme un <strong>tableau de pointeurs</strong> (<code>int **</code>) : on alloue d'abord le tableau de lignes, puis chaque ligne. La libération se fait dans l'ordre inverse : chaque ligne, puis le tableau de pointeurs → <strong>N + 1 free pour N lignes</strong>.</p>",
-        code: "int **m = malloc(nl * sizeof(int *));\nfor (int i = 0; i < nl; i++) {\n    m[i] = malloc(nc * sizeof(int));\n}\nm[1][2] = 42;                    /* utilisation comme un tableau 2D */\n\nfor (int i = 0; i < nl; i++) {\n    free(m[i]);                  /* liberer chaque ligne...  */\n}\nfree(m);                         /* ... puis le tableau de pointeurs */"
+        code: "int **m = malloc(nl * sizeof(int *));\nfor(int i = 0; i < nl; i++) {\n    m[i] = malloc(nc * sizeof(int));\n}\nm[1][2] = 42;                    /* utilisation comme un tableau 2D */\n\nfor(int i = 0; i < nl; i++) {\n    free(m[i]);                  /* liberer chaque ligne...  */\n}\nfree(m);                         /* ... puis le tableau de pointeurs */"
       }
     ],
     questions: [
@@ -792,7 +792,7 @@ const CHAPITRES = [
       {
         type: "sortie",
         q: "Que va afficher ce programme ?",
-        code: "struct Point {\n    int x;\n    int y;\n};\n\nint main(void) {\n    struct Point p = {3, 7};\n    printf(\"%d\", p.x + p.y);\n    return 0;\n}",
+        code: "struct Point {\n    int x;\n    int y;\n};\n\nint main() {\n    struct Point p = {3, 7};\n    printf(\"%d\", p.x + p.y);\n    return 0;\n}",
         reponses: ["10"],
         affichage: "10",
         explication: "L'initialisation {3, 7} affecte les champs dans l'ordre de leur déclaration : x = 3, y = 7. Donc p.x + p.y = 10."
@@ -824,7 +824,7 @@ const CHAPITRES = [
       {
         type: "sortie",
         q: "Que va afficher ce programme ?",
-        code: "typedef struct {\n    char nom[20];\n    int age;\n} Personne;\n\nint main(void) {\n    Personne p = {\"Alice\", 20};\n    p.age = p.age + 1;\n    printf(\"%s a %d ans\", p.nom, p.age);\n    return 0;\n}",
+        code: "typedef struct {\n    char nom[20];\n    int age;\n} Personne;\n\nint main() {\n    Personne p = {\"Alice\", 20};\n    p.age = p.age + 1;\n    printf(\"%s a %d ans\", p.nom, p.age);\n    return 0;\n}",
         reponses: ["Alice a 21 ans"],
         affichage: "Alice a 21 ans",
         explication: "p.age passe de 20 à 21, et %s affiche la chaîne stockée dans le champ nom."
@@ -844,7 +844,7 @@ const CHAPITRES = [
       {
         type: "bug",
         q: "Quel est le problème de ce code ?",
-        code: "typedef struct {\n    int x;\n    int y;\n} Point;\n\nint main(void) {\n    Point *p;\n    p->x = 3;\n    return 0;\n}",
+        code: "typedef struct {\n    int x;\n    int y;\n} Point;\n\nint main() {\n    Point *p;\n    p->x = 3;\n    return 0;\n}",
         choix: [
           "p ne pointe sur rien : il faut d'abord l'associer à une structure existante ou allouée (malloc)",
           "Il faut écrire p.x au lieu de p->x",
@@ -875,7 +875,7 @@ const CHAPITRES = [
       {
         type: "sortie",
         q: "Que va afficher ce programme ? (sépare les valeurs par un espace)",
-        code: "typedef struct {\n    int x;\n    int y;\n} Point;\n\nvoid deplace(Point *p) {\n    p->x = p->x + 1;\n}\n\nint main(void) {\n    Point a = {1, 1};\n    deplace(&a);\n    printf(\"%d %d\", a.x, a.y);\n    return 0;\n}",
+        code: "typedef struct {\n    int x;\n    int y;\n} Point;\n\nvoid deplace(Point *p) {\n    p->x = p->x + 1;\n}\n\nint main() {\n    Point a = {1, 1};\n    deplace(&a);\n    printf(\"%d %d\", a.x, a.y);\n    return 0;\n}",
         reponses: ["2 1"],
         affichage: "2 1",
         explication: "La fonction reçoit l'ADRESSE de a : p->x modifie donc réellement a.x, qui passe de 1 à 2. a.y n'est pas touché."
@@ -919,7 +919,7 @@ const CHAPITRES = [
       {
         titre: "Parcourir une chaîne",
         html: "<p>Le parcours idiomatique s'arrête sur le <code>'\\0'</code> :</p>",
-        code: "char s[] = \"code\";\nint i = 0;\nwhile (s[i] != '\\0') {\n    printf(\"%c-\", s[i]);    /* c-o-d-e- */\n    i++;\n}"
+        code: "char s[] = \"code\";\nint i = 0;\nwhile(s[i] != '\\0') {\n    printf(\"%c-\", s[i]);    /* c-o-d-e- */\n    i++;\n}"
       }
     ],
     questions: [
@@ -1062,7 +1062,7 @@ const CHAPITRES = [
       {
         type: "sortie",
         q: "Que va afficher ce code ?",
-        code: "char s[] = \"code\";\nint i = 0;\nwhile (s[i] != '\\0') {\n    i++;\n}\nprintf(\"%d\", i);",
+        code: "char s[] = \"code\";\nint i = 0;\nwhile(s[i] != '\\0') {\n    i++;\n}\nprintf(\"%d\", i);",
         reponses: ["4"],
         affichage: "4",
         explication: "C'est une réimplémentation de strlen : on avance jusqu'au '\\0'. i vaut 4 à la sortie de la boucle (\"code\" a 4 caractères)."
@@ -1090,7 +1090,7 @@ const CHAPITRES = [
       {
         titre: "Lire et écrire en mode texte",
         html: "<p>Les fonctions miroir de printf/scanf, avec le fichier en premier argument :</p><ul><li>Écriture : <code>fprintf(f, \"%d\\n\", n)</code>, <code>fputs</code>, <code>fputc</code></li><li>Lecture : <code>fscanf(f, \"%d\", &amp;n)</code>, <code>fgets(ligne, taille, f)</code>, <code>fgetc</code></li></ul><p><code>fgetc</code> retourne un <strong>int</strong> et vaut <code>EOF</code> en fin de fichier. <code>fgets</code> retourne <code>NULL</code> en fin de fichier — idéal pour lire ligne par ligne :</p>",
-        code: "char ligne[100];\nwhile (fgets(ligne, 100, f) != NULL) {\n    printf(\"%s\", ligne);        /* traite chaque ligne */\n}\n\nint c;\nwhile ((c = fgetc(f)) != EOF) { /* lecture caractere par caractere */\n    putchar(c);\n}"
+        code: "char ligne[100];\nwhile(fgets(ligne, 100, f) != NULL) {\n    printf(\"%s\", ligne);        /* traite chaque ligne */\n}\n\nint c;\nwhile((c = fgetc(f)) != EOF) { /* lecture caractere par caractere */\n    putchar(c);\n}"
       },
       {
         titre: "Lire et écrire en binaire",
@@ -1099,7 +1099,7 @@ const CHAPITRES = [
       },
       {
         titre: "Se déplacer dans le fichier",
-        html: "<ul><li><code>ftell(f)</code> : position courante du curseur (en octets)</li><li><code>fseek(f, offset, origine)</code> : déplace le curseur (<code>SEEK_SET</code> début, <code>SEEK_CUR</code> position courante, <code>SEEK_END</code> fin)</li><li><code>rewind(f)</code> : revient au début</li><li><code>feof(f)</code> : vrai <strong>seulement après</strong> une lecture qui a atteint la fin — d'où la boucle sur le retour de fgets/fgetc plutôt que <code>while (!feof(f))</code></li></ul>"
+        html: "<ul><li><code>ftell(f)</code> : position courante du curseur (en octets)</li><li><code>fseek(f, offset, origine)</code> : déplace le curseur (<code>SEEK_SET</code> début, <code>SEEK_CUR</code> position courante, <code>SEEK_END</code> fin)</li><li><code>rewind(f)</code> : revient au début</li><li><code>feof(f)</code> : vrai <strong>seulement après</strong> une lecture qui a atteint la fin — d'où la boucle sur le retour de fgets/fgetc plutôt que <code>while(!feof(f))</code></li></ul>"
       }
     ],
     questions: [
@@ -1246,7 +1246,7 @@ const CHAPITRES = [
         type: "vf",
         q: "feof(f) devient vrai seulement APRÈS une tentative de lecture qui a atteint la fin du fichier.",
         bonne: true,
-        explication: "Vrai : c'est pour cela que while (!feof(f)) traite souvent une ligne de trop. La bonne pratique : boucler sur le retour de fgets (NULL) ou fgetc (EOF)."
+        explication: "Vrai : c'est pour cela que while(!feof(f)) traite souvent une ligne de trop. La bonne pratique : boucler sur le retour de fgets (NULL) ou fgetc (EOF)."
       },
       {
         type: "qcm",

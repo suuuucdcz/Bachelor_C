@@ -737,28 +737,15 @@ async function testerExercice(ex, origine) {
     html += "</div></div>";
   });
 
-  if (toutBon) {
-    const memes = exercicesDe(ex.chapitre);
-    const pos = memes.indexOf(ex);
-    if (pos < memes.length - 1) {
-      html += '<div class="quiz-actions"><button class="btn btn-principal" id="btn-exo-suivant">Exercice suivant → ' +
-        echapper(memes[pos + 1].titre) + "</button></div>";
-    }
-  }
-
   zone.innerHTML = html;
   assurerVisible(zone);
-  const btnSuiv = document.getElementById("btn-exo-suivant");
-  if (btnSuiv) {
-    const memes = exercicesDe(ex.chapitre);
-    const pos = memes.indexOf(ex);
-    btnSuiv.addEventListener("click", function () {
-      sauverBrouillon(ex.id);
-      vueExercice(memes[pos + 1].id, origine);
-    });
-  }
 
-  if (toutBon) majProgressionGlobale();
+  if (toutBon) {
+    /* un seul bouton "suivant" : celui de la navigation, mis en évidence */
+    const btnSuiv = document.getElementById("btn-suiv");
+    if (btnSuiv) btnSuiv.classList.add("btn-vert");
+    majProgressionGlobale();
+  }
 }
 
 /* Les numéros de ligne de gcc incluent les en-têtes ajoutés pour les
