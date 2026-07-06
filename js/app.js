@@ -136,6 +136,42 @@ function pourcentage(score, total) {
   return total > 0 ? Math.round((score / total) * 100) : 0;
 }
 
+/* ---------------- Historique (bouton retour du navigateur) ---------------- */
+
+let restauration = false;   /* vrai pendant la restauration d'un état (popstate) */
+let exerciceCourant = null; /* exercice affiché, pour vider sa sauvegarde différée */
+
+function enregistrerVue(etat) {
+  if (restauration) return;
+  if (history.state && JSON.stringify(history.state) === JSON.stringify(etat)) return;
+  if (history.state === null) {
+    history.replaceState(etat, "");
+  } else {
+    history.pushState(etat, "");
+  }
+}
+
+window.addEventListener("popstate", function (e) {
+  restauration = true;
+  const etat = e.state || { vue: "accueil" };
+  if (etat.vue === "chapitre") afficherChapitre(etat.id, etat.onglet || "fiche");
+  else if (etat.vue === "atelier") vueAtelier();
+  else if (etat.vue === "exercice") vueExercice(etat.id, etat.origine);
+  else if (etat.vue === "examen") demarrerExamen();
+  else afficherAccueil();
+  restauration = false;
+});
+
+/* Vide la sauvegarde différée du brouillon avant de quitter un exercice
+   (sinon les toutes dernières frappes seraient perdues). */
+function viderBrouillon() {
+  if (editeur && exerciceCourant) {
+    sauverBrouillon(exerciceCourant);
+  }
+  editeur = null;
+  exerciceCourant = null;
+}
+
 function pause(ms) {
   return new Promise(function (r) { setTimeout(r, ms); });
 }
@@ -208,6 +244,8 @@ function majProgressionGlobale() {
 
 function afficherAccueil() {
   quiz = null;
+  viderBrouillon();
+  enregistrerVue({ vue: "accueil" });
   const stG = statsExos(null);
 
   let html = '<div class="hero">' +
@@ -278,6 +316,8 @@ function afficherAccueil() {
 function afficherChapitre(id, onglet) {
   const ch = CHAPITRES.find(function (c) { return c.id === id; });
   if (!ch) return afficherAccueil();
+  viderBrouillon();
+  enregistrerVue({ vue: "chapitre", id: id, onglet: onglet || "fiche" });
   const nbExos = exercicesDe(id).length;
 
   let html = '<div class="fil-ariane"><a id="retour-accueil">← Accueil</a><span>/</span><span>' +
@@ -298,11 +338,7 @@ function afficherChapitre(id, onglet) {
   document.getElementById("retour-accueil").addEventListener("click", afficherAccueil);
   app.querySelectorAll(".onglet").forEach(function (btn) {
     btn.addEventListener("click", function () {
-      if (btn.dataset.onglet === "quiz") {
-        demarrerQuiz(ch);
-      } else {
-        afficherChapitre(id, btn.dataset.onglet);
-      }
+      afficherChapitre(id, btn.dataset.onglet);
     });
   });
 
@@ -331,7 +367,7 @@ function afficherFiche(ch) {
     ch.questions.length + ' questions)</button> <button class="btn btn-vert" id="btn-vers-exos">💻 Exercices de code</button></div>';
   zone.innerHTML = html;
   document.getElementById("btn-vers-quiz").addEventListener("click", function () {
-    demarrerQuiz(ch);
+    afficherChapitre(ch.id, "quiz");
   });
   document.getElementById("btn-vers-exos").addEventListener("click", function () {
     afficherChapitre(ch.id, "exos");
@@ -349,6 +385,8 @@ function afficherListeExos(ch) {
 
 function vueAtelier() {
   quiz = null;
+  viderBrouillon();
+  enregistrerVue({ vue: "atelier" });
   const st = statsExos(null);
 
   let html = '<div class="fil-ariane"><a id="retour-accueil">← Accueil</a><span>/</span><span>Atelier</span></div>';
@@ -440,6 +478,8 @@ function vueExercice(exId, origine) {
   if (!ex) return vueAtelier();
   const ch = CHAPITRES.find(function (c) { return c.id === ex.chapitre; });
   origine = origine || { atelier: true };
+  viderBrouillon();
+  enregistrerVue({ vue: "exercice", id: exId, origine: origine });
 
   const memes = exercicesDe(ex.chapitre);
   const pos = memes.indexOf(ex);
@@ -495,6 +535,7 @@ function vueExercice(exId, origine) {
 
   /* --- éditeur --- */
   creerEditeur(document.getElementById("zone-editeur"), codeInitial, ex.id);
+  exerciceCourant = ex.id;
 
   /* --- navigation --- */
   document.getElementById("retour-accueil").addEventListener("click", afficherAccueil);
@@ -758,6 +799,13 @@ async function testerExercice(ex, origine) {
       " test(s) réussi(s). Compare les sorties ci-dessous :</div>";
   }
 
+  /* avertissements du compilateur : ça compile, mais gcc a des remarques */
+  const avertissements = reponses[0] && reponses[0].avertissements ? reponses[0].avertissements : "";
+  if (avertissements) {
+    html += '<div class="bloc-avertissements"><div class="titre-avert">⚠️ Ça compile, mais gcc (-Wall -Wextra) met en garde :</div>' +
+      "<pre>" + echapper(nettoyerErreur(avertissements, ex)) + "</pre></div>";
+  }
+
   resultats.forEach(function (r, i) {
     html += '<div class="test-resultat ' + (r.reussi ? "ok" : "ko") + '">' +
       '<div class="titre-test">' + (r.reussi ? "✅" : "❌") + " Test " + (i + 1) + "</div>" +
@@ -838,6 +886,8 @@ function demarrerQuiz(ch) {
 }
 
 function demarrerExamen() {
+  viderBrouillon();
+  enregistrerVue({ vue: "examen" });
   const toutes = [];
   CHAPITRES.forEach(function (ch) {
     ch.questions.forEach(function (q) {
@@ -897,7 +947,7 @@ function afficherQuestion() {
       "</div>";
   } else if (q.type === "sortie") {
     html += '<div class="zone-saisie">' +
-      '<input type="text" id="reponse-sortie" placeholder="Ta réponse (respecte majuscules et espaces)…" autocomplete="off" spellcheck="false">' +
+      '<input type="text" id="reponse-sortie" placeholder="Ta réponse (respecte majuscules et espaces)…" autocomplete="off" spellcheck="false" autocapitalize="off" autocorrect="off">' +
       '<button class="btn btn-principal" id="btn-valider">Valider</button>' +
       "</div>";
   } else {

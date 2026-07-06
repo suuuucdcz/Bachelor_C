@@ -27,6 +27,14 @@ const EXECUTEUR = (function () {
     return (tableau || []).map(function (l) { return l.text; }).join("\n");
   }
 
+  /* Enlève les codes couleur ANSI des diagnostics gcc et remplace le
+     nom de fichier interne de Godbolt par quelque chose de lisible. */
+  function nettoyerDiagnostic(texte) {
+    return String(texte)
+      .replace(/\[[0-9;]*[A-Za-z]/g, "")
+      .replace(/<source>/g, "code.c");
+  }
+
   /* ---------- Godbolt / Compiler Explorer (principal) ---------- */
 
   async function viaGodbolt(code, entree) {
@@ -37,7 +45,7 @@ const EXECUTEUR = (function () {
       body: JSON.stringify({
         source: code,
         options: {
-          userArguments: "-std=gnu11 -O0",
+          userArguments: "-std=gnu11 -O0 -Wall -Wextra -fdiagnostics-color=never",
           executeParameters: { args: [], stdin: entree || "" },
           compilerOptions: { executorRequest: true, skipAsm: true },
           filters: { execute: true },
@@ -55,7 +63,7 @@ const EXECUTEUR = (function () {
       return {
         ok: false,
         etape: "compilation",
-        message: lignes(compil.stderr) || "Erreur de compilation inconnue"
+        message: nettoyerDiagnostic(lignes(compil.stderr)) || "Erreur de compilation inconnue"
       };
     }
     return {
@@ -63,7 +71,8 @@ const EXECUTEUR = (function () {
       stdout: lignes(res.stdout),
       stderr: lignes(res.stderr),
       codeRetour: typeof res.code === "number" ? res.code : null,
-      tue: res.timedOut === true /* programme interrompu : boucle infinie ? */
+      tue: res.timedOut === true, /* programme interrompu : boucle infinie ? */
+      avertissements: compil ? nettoyerDiagnostic(lignes(compil.stderr)) : ""
     };
   }
 
@@ -73,7 +82,7 @@ const EXECUTEUR = (function () {
     const rep = await fetch(WANDBOX, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      signal: signalDelai(15000),
+      signal: signalDelai(8000),
       body: JSON.stringify({
         code: code,
         compiler: COMPILATEUR_WANDBOX,
@@ -91,7 +100,8 @@ const EXECUTEUR = (function () {
       stdout: res.program_output || "",
       stderr: res.program_error || "",
       codeRetour: res.status !== undefined && res.status !== "" ? parseInt(res.status, 10) : null,
-      tue: !!res.signal
+      tue: !!res.signal,
+      avertissements: res.compiler_error || ""
     };
   }
 
