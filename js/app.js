@@ -136,6 +136,12 @@ function pourcentage(score, total) {
   return total > 0 ? Math.round((score / total) * 100) : 0;
 }
 
+function formaterDuree(ms) {
+  const s = Math.max(1, Math.round(ms / 1000));
+  if (s < 60) return s + " s";
+  return Math.floor(s / 60) + " min " + (s % 60) + " s";
+}
+
 /* ---------------- Historique (bouton retour du navigateur) ---------------- */
 
 let restauration = false;   /* vrai pendant la restauration d'un état (popstate) */
@@ -170,10 +176,6 @@ function viderBrouillon() {
   }
   editeur = null;
   exerciceCourant = null;
-}
-
-function pause(ms) {
-  return new Promise(function (r) { setTimeout(r, ms); });
 }
 
 /* Fait défiler la page pour rendre un élément visible (clavier virtuel
@@ -338,6 +340,9 @@ function afficherChapitre(id, onglet) {
   document.getElementById("retour-accueil").addEventListener("click", afficherAccueil);
   app.querySelectorAll(".onglet").forEach(function (btn) {
     btn.addEventListener("click", function () {
+      /* re-cliquer l'onglet déjà actif ne fait rien (évite par exemple
+         de redémarrer un quiz en cours d'un geste malheureux) */
+      if (btn.classList.contains("actif")) return;
       afficherChapitre(id, btn.dataset.onglet);
     });
   });
@@ -441,7 +446,8 @@ function vueAtelier() {
     });
   });
   brancherLignesExos(app, { atelier: true });
-  window.scrollTo(0, 0);
+  window.scrollTo(0, scrollAtelier);
+  scrollAtelier = 0;
 }
 
 function puce(filtre, libelle, active) {
@@ -463,9 +469,12 @@ function rendreLignesExos(liste) {
   return html;
 }
 
+let scrollAtelier = 0; /* pour retrouver sa place dans la liste au retour */
+
 function brancherLignesExos(zone, origine) {
   zone.querySelectorAll(".ligne-exo").forEach(function (ligne) {
     ligne.addEventListener("click", function () {
+      if (origine && origine.atelier) scrollAtelier = window.scrollY;
       vueExercice(ligne.dataset.exo, origine);
     });
   });
@@ -721,6 +730,13 @@ async function testerExercice(ex, origine) {
   const zone = document.getElementById("zone-resultats");
   const btn = document.getElementById("btn-tester");
 
+  if (normaliser(code) === "") {
+    zone.innerHTML = '<div class="bandeau-erreur">✏️ L\'éditeur est vide — écris ton code avant de tester ! ' +
+      "(Le bouton ↺ Réinitialiser restaure le code de départ.)</div>";
+    assurerVisible(zone);
+    return;
+  }
+
   if (ex.type === "fonction" && /\bmain\s*\(/.test(code)) {
     zone.innerHTML = '<div class="bandeau-erreur">⚠️ Ton code contient un main : pour cet exercice, ' +
       "écris uniquement la fonction demandée — le testeur fournit son propre main.</div>";
@@ -879,6 +895,7 @@ function demarrerQuiz(ch) {
     questions: melanger(ch.questions),
     index: 0,
     score: 0,
+    debut: Date.now(),
     retour: function () { afficherChapitre(ch.id, "fiche"); },
     recommencer: function () { afficherChapitre(ch.id, "quiz"); }
   };
@@ -902,6 +919,7 @@ function demarrerExamen() {
     questions: melanger(toutes).slice(0, EXAMEN.nbQuestions),
     index: 0,
     score: 0,
+    debut: Date.now(),
     retour: afficherAccueil,
     recommencer: demarrerExamen
   };
@@ -1086,7 +1104,8 @@ function afficherResultat() {
     '<div class="jauge-score" style="background: conic-gradient(' + couleur + " " + pct + '%, var(--panneau-2) 0)">' +
     '<div class="interieur">' + pct + "&nbsp;%</div></div>" +
     '<p class="detail">' + quiz.score + " bonne" + (quiz.score > 1 ? "s" : "") + " réponse" + (quiz.score > 1 ? "s" : "") +
-    " sur " + total + " · " + message + "</p>" +
+    " sur " + total + (quiz.debut ? " · terminé en " + formaterDuree(Date.now() - quiz.debut) : "") +
+    "</p><p class=\"detail\">" + message + "</p>" +
     (record ? '<p class="record">⭐ Nouveau record personnel !</p>' : "") +
     '<div class="actions">' +
     '<button class="btn" id="btn-retour">← Retour</button>' +
@@ -1103,6 +1122,14 @@ function afficherResultat() {
 document.getElementById("lien-accueil").addEventListener("click", function (e) {
   e.preventDefault();
   afficherAccueil();
+});
+
+/* Onglet masqué ou fermé : on sauve tout de suite le brouillon en cours
+   et on envoie la synchronisation en ligne en attente. */
+document.addEventListener("visibilitychange", function () {
+  if (document.visibilityState !== "hidden") return;
+  if (editeur && exerciceCourant) sauverBrouillon(exerciceCourant);
+  if (typeof COMPTE !== "undefined" && COMPTE.connecte()) COMPTE.viderPush(progression);
 });
 
 document.getElementById("btn-reset").addEventListener("click", function () {

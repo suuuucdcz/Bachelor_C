@@ -49,11 +49,26 @@ const COMPTE = (function () {
   }
 
   /* Poussée différée : appelée à chaque sauvegarde locale. */
+  let pushEnAttente = false;
+
   function programmerPush(donnees) {
     if (!connecte()) return;
     clearTimeout(minuteriePush);
     const copie = JSON.parse(JSON.stringify(donnees));
-    minuteriePush = setTimeout(function () { pousser(copie); }, 2000);
+    pushEnAttente = true;
+    minuteriePush = setTimeout(function () {
+      pushEnAttente = false;
+      pousser(copie);
+    }, 2000);
+  }
+
+  /* Envoi immédiat d'une poussée en attente (onglet fermé ou masqué :
+     sans ça, les 2 dernières secondes d'activité ne partiraient jamais). */
+  function viderPush(donnees) {
+    if (!connecte() || !pushEnAttente) return;
+    clearTimeout(minuteriePush);
+    pushEnAttente = false;
+    pousser(JSON.parse(JSON.stringify(donnees)));
   }
 
   async function synchroniser() {
@@ -221,6 +236,7 @@ const COMPTE = (function () {
   return {
     init: init,
     connecte: connecte,
-    programmerPush: programmerPush
+    programmerPush: programmerPush,
+    viderPush: viderPush
   };
 })();
